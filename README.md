@@ -37,3 +37,7 @@ you weren't running the program).  Added grey bars for the hour of the day
 because the image is probably wider than your monitor and I doubt you can
 intuitively detect where 4:13pm is with just your eyeball.
 
+Acknowledgements
+----------------
+Thanks to Matthew Dixon Cowles for 'ping.py'
+
