@@ -5,8 +5,13 @@
     17kb file each day, starts a new file at midnight
 """
 from __future__ import print_function
-import ping, socket, struct, sys, time
+import ping
+import socket
+import struct
+import sys
+import time
 
+TOO_SLOW = 511  # if ping is >511ms response time, it's bad
 
 def hostname_to_hex(remotehost):
   " returns eight-char hex string "
@@ -28,6 +33,7 @@ def pingloop(remoteaddr, grain=5, verbose=False):
   oldnow = timeofday_coarse(grain)
   outfile = None
   ZERO = struct.pack('!h', 0)
+  wasgood = None
   while True:
     day = time.strftime('%Y%m%d')
     if day != oldday:
@@ -58,25 +64,34 @@ def pingloop(remoteaddr, grain=5, verbose=False):
     try:
       pingtime = int((ping.do_one(remoteaddr, 1) or -.001) * 1000)
       polls.append(pingtime)
-    except socket.error:
-      # TODO: detect when we fail because we're not root and die
-      # TODO: detect when we fail because no default iface and pass
-      pingtime = -2
+    except socket.error as e:
+      if 'Operation not permitted' in e.message:
+        raise
+      else:
+        print(e.message)
+        pingtime = -2
     polls.append(pingtime)
     if verbose:
-      print("%s: %d" % (time.strftime('%H:%M:%S'), pingtime), end='\n')
-#      if (pingtime < 0 or pingtime > 300):
-#        print("%s: %d" % (time.strftime('%H:%M:%S'), pingtime), end='\n')
-#      else:
-#        print("%s: %d" % (time.strftime('%H:%M:%S'), pingtime), end='\r')
+      if (pingtime < 0 or pingtime > TOO_SLOW):
+        isgood = False
+      else:
+        isgood = True
+      if isgood != wasgood:
+        endchar = '\n'
+      else:
+        endchar = '\r'
+      wasgood = isgood
+      nicetime = time.strftime('%H:%M:%S')
+      print("{}: {}ms".format(nicetime, pingtime), end=endchar)
+      sys.stdout.flush()  # needed so that '\r' works properly. Ugh.
     time.sleep(1)
 
 
+# -- main
 if len(sys.argv) != 2:
   print("Usage: pinglog remotehost")
   sys.exit(1)
 ADDR = socket.gethostbyname(sys.argv[1])
 if ADDR is None:
   raise Exception("bad hostname %s" % sys.argv[1])
-
-pingloop(ADDR, verbose=True)
+pingloop(ADDR, verbose=sys.stdout.isatty())

@@ -8,6 +8,10 @@ few days's worth of data an use my meatbrain's pattern-matching abilities.
 Also so I can show the pictures to other meatbrains, to prove that my
 meatbrain isn't hallucinating.
 
+'pingwatch.sh' is a tighter version that doesn't make pictures, it's just
+for running in a tiny terminal window somewhere.
+
+
 Use
 ---
 Since it needs to send out and listen for ICMP messages, it'll need to run
@@ -36,6 +40,14 @@ measurement couldn't be taken (maybe you unplugged the net cable, or maybe
 you weren't running the program).  Added grey bars for the hour of the day
 because the image is probably wider than your monitor and I doubt you can
 intuitively detect where 4:13pm is with just your eyeball.
+
+You will probably wish to assemble all the charts into one very large one 
+so it will be easier to see patterns.
+
+    optipng *.png
+    montage -tile 1x -geometry +0+0 *.png /tmp/bigchart.png
+    optipng /tmp/bigchart.png
+
 
 Acknowledgements
 ----------------

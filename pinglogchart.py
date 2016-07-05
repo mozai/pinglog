@@ -1,5 +1,7 @@
 #!/usr/bin/python
 " turns the pinglog *.dat files into a picture "
+# remember: 0 is no measurement, -1 is timeout,
+#  and -2 is socket not available (cable unplugged)
 from __future__ import print_function
 import struct, sys
 from PIL import Image, ImageDraw
@@ -61,4 +63,11 @@ for FNAME in sys.argv[1:]:
   DATA = file_to_list(FOBJ)
   IMAGE = numlist_to_image(DATA)
   IMAGE.save(FNAME.replace('.dat', '.png'), 'PNG')
+  if sys.stdin.isatty():
+    NUM = sum([1 for i in DATA if (i !=0 and i != -2)])
+    FAILS = sum([1 for i in DATA if (i == -1)])
+    AVG = sum([i for i in DATA if (i > 0)])*1.0/NUM
+    FAILRATE = FAILS*1.0/NUM * 100
+    print("samples taken: {}".format(NUM))
+    print("average ping: {:.0f}ms  drop rate: {:1.1f}%".format(AVG, FAILRATE))
 
